@@ -1,0 +1,13 @@
+# Placeholder Images
+
+This directory should contain your portfolio images:
+
+- profile.jpg - Your profile picture
+- project1.jpg - First project screenshot
+- project2.jpg - Second project screenshot  
+- project3.jpg - Third project screenshot
+- company1.png - First company logo
+- company2.png - Second company logo
+- company3.png - Third company logo
+
+You can replace these placeholder references with your actual images.
