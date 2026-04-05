@@ -49,6 +49,8 @@ class AboutSection extends StatelessWidget {
 
             SizedBox(height: 8.h),
 
+
+
             // Content
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,37 +145,37 @@ class AboutSection extends StatelessWidget {
                 SizedBox(width: 48.w),
 
                 // Right Side - Stats
-                if (MediaQuery.of(context).size.width > AppConstants.tabletBreakpoint)
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        _StatCard(
-                          number: '2+',
-                          label: 'Years Experience',
-                          icon: Icons.work_outline,
-                        ).animate().fadeIn(delay: 800.ms).scale(),
-                        SizedBox(height: 16.h),
-                        _StatCard(
-                          number: '${portfolioData.projects.length}+',
-                          label: 'Projects Completed',
-                          icon: Icons.code,
-                        ).animate().fadeIn(delay: 1000.ms).scale(),
-                        SizedBox(height: 16.h),
-                        _StatCard(
-                          number: '${portfolioData.skills.length}+',
-                          label: 'Technologies',
-                          icon: Icons.psychology,
-                        ).animate().fadeIn(delay: 1200.ms).scale(),
-                        SizedBox(height: 16.h),
-                        _StatCard(
-                          number: '100%',
-                          label: 'Client Satisfaction',
-                          icon: Icons.thumb_up,
-                        ).animate().fadeIn(delay: 1400.ms).scale(),
-                      ],
-                    ),
-                  ),
+                // if (MediaQuery.of(context).size.width > AppConstants.tabletBreakpoint)
+                //   Expanded(
+                //     flex: 1,
+                //     child: Column(
+                //       children: [
+                //         _StatCard(
+                //           number: '2+',
+                //           label: 'Years Experience',
+                //           icon: Icons.work_outline,
+                //         ).animate().fadeIn(delay: 800.ms).scale(),
+                //         SizedBox(height: 16.h),
+                //         _StatCard(
+                //           number: '${portfolioData.projects.length}+',
+                //           label: 'Projects Completed',
+                //           icon: Icons.code,
+                //         ).animate().fadeIn(delay: 1000.ms).scale(),
+                //         SizedBox(height: 16.h),
+                //         _StatCard(
+                //           number: '${portfolioData.skills.length}+',
+                //           label: 'Technologies',
+                //           icon: Icons.psychology,
+                //         ).animate().fadeIn(delay: 1200.ms).scale(),
+                //         SizedBox(height: 16.h),
+                //         _StatCard(
+                //           number: '100%',
+                //           label: 'Client Satisfaction',
+                //           icon: Icons.thumb_up,
+                //         ).animate().fadeIn(delay: 1400.ms).scale(),
+                //       ],
+                //     ),
+                //   ),
               ],
             ),
 
