@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../utils/size_extensions.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../controllers/portfolio_controller.dart';
 import '../constants/app_constants.dart';
 import '../models/experience_model.dart';
+import 'section_header.dart';
 
 class ExperienceSection extends StatelessWidget {
   const ExperienceSection({super.key});
@@ -14,50 +14,21 @@ class ExperienceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<PortfolioController>();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: AppConstants.paddingLarge.w,
-        vertical: AppConstants.paddingXLarge.h,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppConstants.surfaceColor,
-            AppConstants.backgroundColor,
-          ],
-        ),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: AppConstants.paddingXLarge.h),
       child: Obx(() {
         final portfolioData = controller.portfolioData.value;
         if (portfolioData == null) return const SizedBox.shrink();
 
         return Column(
           children: [
-            // Section Title
-            Text(
-              'Work Experience',
-              style: TextStyle(
-                fontSize: 28.sp,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.textPrimary,
-              ),
-            ).animate().fadeIn().slideY(),
-
-            SizedBox(height: 8.h),
-
-            Container(
-              width: 60.w,
-              height: 3.h,
-              decoration: BoxDecoration(
-                gradient: AppConstants.primaryGradient,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ).animate().fadeIn(delay: 200.ms).scaleX(),
-
-            SizedBox(height: 24.h),
+            const SectionHeader(
+              eyebrow: 'Career',
+              title: 'Work experience',
+              subtitle:
+                  'Roles where I shipped features, mentored peers, and owned outcomes end to end.',
+            ),
+            SizedBox(height: 28.h),
 
             // Experience Timeline
             AnimationLimiter(
@@ -148,13 +119,10 @@ class _ExperienceCard extends StatelessWidget {
           Expanded(
             child: Container(
               padding: EdgeInsets.all(AppConstants.paddingLarge.w),
-              decoration: BoxDecoration(
-                color: AppConstants.cardColor,
-                borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-                border: Border.all(
-                  color: AppConstants.primaryColor.withOpacity(0.1),
-                  width: 1,
-                ),
+              clipBehavior: Clip.antiAlias,
+              decoration: AppConstants.depthPanelDecoration(
+                accentColors: [AppConstants.primaryColor, AppConstants.secondaryColor],
+                borderRadius: AppConstants.radiusLarge,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,8 +239,8 @@ class _ExperienceCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  ...experience.achievements.map((achievement) {
-                    return Container(
+                  ...experience.achievements.map(
+                    (achievement) => Container(
                       margin: EdgeInsets.only(bottom: 4.h),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,8 +266,8 @@ class _ExperienceCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -1,158 +1,216 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../utils/size_extensions.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import '../controllers/portfolio_controller.dart';
-import '../constants/app_constants.dart';
+import 'package:get/get.dart';
 
-class SkillsSection extends StatelessWidget {
+import '../constants/app_constants.dart';
+import '../controllers/portfolio_controller.dart';
+import '../models/skill_model.dart';
+import '../utils/size_extensions.dart';
+import 'section_header.dart';
+
+/// Skills area — category chips, track-style rows with brand colors/icons,
+/// and a compact “focus” triad (replaces the old wrap + bar block).
+class SkillsSection extends StatefulWidget {
   const SkillsSection({super.key});
+
+  @override
+  State<SkillsSection> createState() => _SkillsSectionState();
+}
+
+class _SkillsSectionState extends State<SkillsSection> {
+  int _categoryIndex = 0;
+
+  Color _skillColor(SkillModel s) {
+    if (s.color.trim().isEmpty) return AppConstants.secondaryColor;
+    try {
+      final h = s.color.replaceFirst('#', '').trim();
+      if (h.length == 6) return Color(int.parse('FF$h', radix: 16));
+      if (h.length == 8) return Color(int.parse(h, radix: 16));
+    } catch (_) {}
+    return AppConstants.secondaryColor;
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<PortfolioController>();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: AppConstants.paddingLarge.w,
-        vertical: AppConstants.paddingXLarge.h,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppConstants.surfaceColor,
-            AppConstants.backgroundColor,
-          ],
-        ),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: AppConstants.paddingXLarge.h),
       child: Obx(() {
         final portfolioData = controller.portfolioData.value;
         if (portfolioData == null) return const SizedBox.shrink();
 
-        final skillCategories = controller.getSkillCategories();
+        final categories = controller.getSkillCategories();
+        if (categories.isEmpty) return const SizedBox.shrink();
+
+        _categoryIndex = _categoryIndex.clamp(0, categories.length - 1);
+        final active = categories[_categoryIndex];
+        final skills = controller.getSkillsByCategory(active);
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Section Title
-            Text(
-              'Skills & Technologies',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.textPrimary,
-              ),
-            ).animate().fadeIn().slideY(),
-
-            SizedBox(height: 2.h),
-
-            Container(
-              width: 30.w,
-              height: 2.h,
-              decoration: BoxDecoration(
-                gradient: AppConstants.primaryGradient,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ).animate().fadeIn(delay: 200.ms).scaleX(),
-
-            SizedBox(height: 8.h),
-
-            // Skills by Category
-            ...skillCategories.map((category) {
-              final categorySkills = controller.getSkillsByCategory(category);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category Title
-                  Text(
-                    category,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppConstants.textPrimary,
-                    ),
-                  ).animate().fadeIn().slideX(),
-
-                  SizedBox(height: 8.h),
-
-                  // Skills Grid
-                  AnimationLimiter(
-                    child: Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: AnimationConfiguration.toStaggeredList(
-                        duration: const Duration(milliseconds: 600),
-                        childAnimationBuilder: (widget) => SlideAnimation(
-                          verticalOffset: 50.0,
-                          child: FadeInAnimation(child: widget),
+            const SectionHeader(
+              eyebrow: 'Capabilities',
+              title: 'Skills & stack',
+              subtitle:
+                  'Pick a domain to see tools and comfort level. Colors follow each skill’s brand palette.',
+            ),
+            SizedBox(height: 24.h),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: List.generate(categories.length, (i) {
+                  final selected = i == _categoryIndex;
+                  return Padding(
+                    padding: EdgeInsets.only(right: 10.w),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => setState(() => _categoryIndex = i),
+                        borderRadius: BorderRadius.circular(999),
+                        child: AnimatedContainer(
+                          duration: AppConstants.animationDuration,
+                          curve: Curves.easeOutCubic,
+                          clipBehavior: Clip.antiAlias,
+                          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 11.h),
+                          decoration: selected
+                              ? AppConstants.depthPanelDecoration(
+                                  accentColors: [
+                                    AppConstants.secondaryColor,
+                                    AppConstants.primaryColor,
+                                  ],
+                                  borderRadius: 999,
+                                )
+                              : BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: AppConstants.textTertiary.withOpacity(0.35),
+                                  ),
+                                  color: AppConstants.cardColor.withOpacity(0.45),
+                                ),
+                          child: Text(
+                            categories[i],
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                              color: selected ? AppConstants.textPrimary : AppConstants.textSecondary,
+                            ),
+                          ),
                         ),
-                        children: categorySkills.map((skill) {
-                          return _SkillCard(skill: skill);
-                        }).toList(),
                       ),
                     ),
-                  ),
-
-                  SizedBox(height: 12.h),
-                ],
-              );
-            }).toList(),
-
-            // Overall Proficiency
-            Container(
-              padding: EdgeInsets.all(AppConstants.paddingLarge.w),
-              decoration: BoxDecoration(
-                color: AppConstants.cardColor,
-                borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-                border: Border.all(
-                  color: AppConstants.primaryColor.withOpacity(0.1),
-                  width: 1,
+                  );
+                }),
+              ),
+            ).animate().fadeIn(delay: 80.ms).slideX(begin: -0.02),
+            SizedBox(height: 20.h),
+            AnimatedSwitcher(
+              duration: AppConstants.longAnimationDuration,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey(active),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < skills.length; i++)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child: _SkillTrackTile(
+                          skill: skills[i],
+                          skillColor: _skillColor(skills[i]),
+                          index: i,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    'Overall Proficiency',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                      color: AppConstants.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  Row(
+            ),
+            SizedBox(height: 28.h),
+            Text(
+              'Where I spend depth',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.4,
+                color: AppConstants.textTertiary,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            LayoutBuilder(
+              builder: (context, c) {
+                final narrow = c.maxWidth < 640;
+                if (narrow) {
+                  return Column(
                     children: [
-                      Expanded(
-                        child: _ProficiencyBar(
-                          label: 'Mobile Development',
-                          percentage: 0.95,
-                          color: AppConstants.primaryColor,
-                        ),
+                      _FocusOrb(
+                        label: 'Product & mobile',
+                        value: 0.95,
+                        caption: 'Shipping end-to-end apps',
+                        colors: [AppConstants.primaryColor, AppConstants.glowPrimary],
                       ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: _ProficiencyBar(
-                          label: 'UI/UX Design',
-                          percentage: 0.85,
-                          color: AppConstants.secondaryColor,
-                        ),
+                      SizedBox(height: 14.h),
+                      _FocusOrb(
+                        label: 'Interfaces',
+                        value: 0.85,
+                        caption: 'Systems that feel intentional',
+                        colors: [AppConstants.secondaryColor, AppConstants.glowSecondary],
                       ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: _ProficiencyBar(
-                          label: 'Backend Integration',
-                          percentage: 0.80,
-                          color: AppConstants.accentColor,
-                        ),
+                      SizedBox(height: 14.h),
+                      _FocusOrb(
+                        label: 'Integration',
+                        value: 0.80,
+                        caption: 'APIs, data, and services',
+                        colors: [AppConstants.accentColor, AppConstants.glowAccent],
                       ),
                     ],
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(delay: 800.ms).slideY(),
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _FocusOrb(
+                        label: 'Product & mobile',
+                        value: 0.95,
+                        caption: 'Shipping end-to-end apps',
+                        colors: [AppConstants.primaryColor, AppConstants.glowPrimary],
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: _FocusOrb(
+                        label: 'Interfaces',
+                        value: 0.85,
+                        caption: 'Systems that feel intentional',
+                        colors: [AppConstants.secondaryColor, AppConstants.glowSecondary],
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: _FocusOrb(
+                        label: 'Integration',
+                        value: 0.80,
+                        caption: 'APIs, data, and services',
+                        colors: [AppConstants.accentColor, AppConstants.glowAccent],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ).animate().fadeIn(delay: 160.ms).slideY(begin: 0.04),
           ],
         );
       }),
@@ -160,168 +218,328 @@ class SkillsSection extends StatelessWidget {
   }
 }
 
-class _SkillCard extends StatelessWidget {
-  final dynamic skill;
-
-  const _SkillCard({required this.skill});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppConstants.cardColor,
-        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-        border: Border.all(
-          color: AppConstants.primaryColor.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Skill Icon
-          Container(
-            width: 32.w,
-            height: 32.w,
-            decoration: BoxDecoration(
-              color: AppConstants.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-            ),
-            child: Icon(
-              _getSkillIcon(skill.name),
-              color: AppConstants.primaryColor,
-              size: 16.sp,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          
-          // Skill Name
-          Text(
-            skill.name,
-            style: TextStyle(
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w600,
-              color: AppConstants.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 4.h),
-          
-          // Proficiency Bar
-          Container(
-            width: 60.w,
-            height: 3.h,
-            decoration: BoxDecoration(
-              color: AppConstants.textTertiary.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: skill.proficiency,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: AppConstants.primaryGradient,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getSkillIcon(String skillName) {
-    switch (skillName.toLowerCase()) {
-      case 'flutter':
-        return Icons.phone_android;
-      case 'dart':
-        return Icons.code;
-      case 'android':
-        return Icons.android;
-      case 'ios':
-        return Icons.phone_iphone;
-      case 'firebase':
-        return Icons.cloud;
-      case 'sqlite':
-        return Icons.storage;
-      case 'javascript':
-        return Icons.javascript;
-      case 'python':
-        return Icons.code;
-      case 'java':
-        return Icons.code;
-      case 'figma':
-        return Icons.design_services;
-      case 'material design':
-        return Icons.palette;
-      default:
-        return Icons.extension;
-    }
-  }
-}
-
-class _ProficiencyBar extends StatelessWidget {
-  final String label;
-  final double percentage;
-  final Color color;
-
-  const _ProficiencyBar({
-    required this.label,
-    required this.percentage,
-    required this.color,
+class _SkillTrackTile extends StatelessWidget {
+  const _SkillTrackTile({
+    required this.skill,
+    required this.skillColor,
+    required this.index,
   });
 
+  final SkillModel skill;
+  final Color skillColor;
+  final int index;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppConstants.textSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                softWrap: false,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Text(
-              '${(percentage * 100).toInt()}%',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+    final pct = (skill.proficiency * 100).round();
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 14.h),
+        decoration: AppConstants.depthPanelDecoration(
+          accentColors: [skillColor, AppConstants.secondaryColor],
+          borderRadius: AppConstants.radiusLarge,
+          boxShadow: [
+            BoxShadow(
+              color: skillColor.withOpacity(0.1),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-        SizedBox(height: 8.h),
-        Container(
-          height: 6.h,
-          decoration: BoxDecoration(
-            color: AppConstants.textTertiary.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(3),
-          ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: percentage,
-            child: Container(
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(3),
-              ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _SkillAvatar(skill: skill, color: skillColor),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        skill.name,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.25,
+                          color: AppConstants.textPrimary,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        skill.category,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.textTertiary,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [skillColor, AppConstants.secondaryColor],
+                  ).createShader(bounds),
+                  blendMode: BlendMode.srcIn,
+                  child: Text(
+                    '$pct%',
+                    style: TextStyle(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 14.h),
+            _AnimatedTrack(
+              value: skill.proficiency,
+              activeColor: skillColor,
+              delay: Duration(milliseconds: 80 + index * 45),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 420.ms, delay: (60 + index * 40).ms).slideX(begin: 0.04);
+  }
+}
+
+class _SkillAvatar extends StatelessWidget {
+  const _SkillAvatar({required this.skill, required this.color});
+
+  final SkillModel skill;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = skill.name.isNotEmpty ? skill.name[0].toUpperCase() : '?';
+
+    return Container(
+      width: 52.w,
+      height: 52.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withOpacity(0.65), width: 2),
+        boxShadow: [
+          BoxShadow(color: color.withOpacity(0.25), blurRadius: 14, spreadRadius: 0),
+        ],
+      ),
+      child: ClipOval(
+        child: ColoredBox(
+          color: AppConstants.backgroundColor.withOpacity(0.85),
+          child: skill.iconUrl.isNotEmpty
+              ? Image.asset(
+                  skill.iconUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Center(
+                    child: Text(
+                      initial,
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                )
+              : Center(
+                  child: Text(
+                    initial,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedTrack extends StatelessWidget {
+  const _AnimatedTrack({
+    required this.value,
+    required this.activeColor,
+    required this.delay,
+  });
+
+  final double value;
+  final Color activeColor;
+  final Duration delay;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: value),
+      duration: AppConstants.longAnimationDuration + const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: SizedBox(
+            height: 8.h,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: AppConstants.textTertiary.withOpacity(0.12)),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: v.clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(99),
+                        gradient: LinearGradient(
+                          colors: [activeColor, AppConstants.secondaryColor.withOpacity(0.85)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: activeColor.withOpacity(0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        );
+      },
+    ).animate().shimmer(duration: 1800.ms, delay: delay, color: Colors.white.withOpacity(0.06));
+  }
+}
+
+class _FocusOrb extends StatelessWidget {
+  const _FocusOrb({
+    required this.label,
+    required this.value,
+    required this.caption,
+    required this.colors,
+  });
+
+  final String label;
+  final double value;
+  final String caption;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: value),
+      duration: AppConstants.longAnimationDuration,
+      curve: Curves.easeOutCubic,
+      builder: (context, v, child) {
+        return Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: AppConstants.depthPanelDecoration(accentColors: colors),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              final horizontalPad = (w * 0.055).clamp(8.0, 18.0);
+              final ring = (w * 0.30).clamp(34.0, 50.0);
+              final gap = (w * 0.028).clamp(6.0, 12.0);
+              final stroke = ring < 40 ? 3.0 : 4.0;
+
+              return Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPad,
+                  18.h,
+                  horizontalPad,
+                  18.h,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: ring,
+                          height: ring,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CircularProgressIndicator(
+                                value: 1,
+                                strokeWidth: stroke,
+                                color: AppConstants.textTertiary.withOpacity(0.2),
+                              ),
+                              CircularProgressIndicator(
+                                value: v,
+                                strokeWidth: stroke,
+                                strokeCap: StrokeCap.round,
+                                color: colors.first,
+                              ),
+                              Center(
+                                child: Text(
+                                  '${(v * 100).round()}',
+                                  style: TextStyle(
+                                    fontSize: (ring * 0.26).clamp(10.0, 14.0),
+                                    fontWeight: FontWeight.w900,
+                                    color: AppConstants.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: gap),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: (w * 0.055).clamp(11.0, 14.0),
+                                  fontWeight: FontWeight.w800,
+                                  color: AppConstants.textPrimary,
+                                  height: 1.2,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                caption,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: (w * 0.042).clamp(9.5, 11.5),
+                                  height: 1.35,
+                                  color: AppConstants.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

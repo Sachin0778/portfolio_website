@@ -6,6 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../controllers/portfolio_controller.dart';
 import '../constants/app_constants.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'depth_panel.dart';
+import 'section_header.dart';
 
 class ContactSection extends StatelessWidget {
   const ContactSection({super.key});
@@ -14,75 +16,57 @@ class ContactSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<PortfolioController>();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: AppConstants.paddingLarge.w,
-        vertical: AppConstants.paddingXLarge.h,
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: AppConstants.paddingXLarge.h),
       child: Obx(() {
         final portfolioData = controller.portfolioData.value;
         if (portfolioData == null) return const SizedBox.shrink();
 
         return Column(
           children: [
-            // Section Title
-            Text(
-              'Get In Touch',
-              style: TextStyle(
-                fontSize: 28.sp,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.textPrimary,
-              ),
-            ).animate().fadeIn().slideY(),
-
-            SizedBox(height: 8.h),
-
-            Container(
-              width: 60.w,
-              height: 3.h,
-              decoration: BoxDecoration(
-                gradient: AppConstants.primaryGradient,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ).animate().fadeIn(delay: 200.ms).scaleX(),
-
-            SizedBox(height: 24.h),
+            const SectionHeader(
+              eyebrow: 'Contact',
+              title: 'Let\'s build something great',
+              subtitle:
+                  'Tell me about your idea — I typically reply within one business day.',
+            ),
+            SizedBox(height: 28.h),
 
             // Contact Content
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left Side - Contact Info
                 Expanded(
                   flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Let\'s work together!',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppConstants.textPrimary,
-                        ),
-                      ).animate().fadeIn(delay: 400.ms).slideX(),
+                  child: DepthPanel(
+                    padding: EdgeInsets.all(AppConstants.paddingLarge.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Let\'s work together',
+                          style: TextStyle(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: AppConstants.textPrimary,
+                          ),
+                        ).animate().fadeIn(delay: 400.ms).slideX(),
 
-                      SizedBox(height: 12.h),
+                        SizedBox(height: 12.h),
 
-                      Text(
-                        'I\'m always interested in new opportunities and exciting projects. Whether you have a question or just want to say hi, I\'ll try my best to get back to you!',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppConstants.textSecondary,
-                          height: 1.5,
-                        ),
-                      ).animate().fadeIn(delay: 600.ms).slideX(),
+                        Text(
+                          'I\'m always interested in new opportunities and exciting projects. Whether you have a question or just want to say hi, I\'ll try my best to get back to you!',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppConstants.textSecondary,
+                            height: 1.5,
+                          ),
+                        ).animate().fadeIn(delay: 600.ms).slideX(),
 
-                      SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                      // Contact Methods
-                      _ContactMethod(
+                        _ContactMethod(
                         icon: Icons.email,
                         title: 'Email',
                         subtitle: portfolioData.email,
@@ -163,7 +147,8 @@ class ContactSection extends StatelessWidget {
                           );
                         }).toList(),
                       ).animate().fadeIn(delay: 1600.ms).slideY(),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -227,56 +212,64 @@ class _ContactMethod extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-        child: Container(
-          padding: EdgeInsets.all(AppConstants.paddingSmall.w),
-          decoration: BoxDecoration(
-            color: AppConstants.cardColor,
-            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-            border: Border.all(
-              color: AppConstants.primaryColor.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  gradient: AppConstants.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-                ),
-                child: Icon(
-                  icon,
-                  color: AppConstants.textPrimary,
-                  size: 20.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppConstants.textPrimary,
-                      ),
+        child: DepthPanel(
+          borderRadius: AppConstants.radiusMedium,
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              final iconSize = (w * 0.2).clamp(34.0, 44.0);
+              final gap = (w * 0.035).clamp(6.0, 12.0);
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: iconSize,
+                    height: iconSize,
+                    decoration: BoxDecoration(
+                      gradient: AppConstants.primaryGradient,
+                      borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
                     ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppConstants.textSecondary,
-                      ),
+                    child: Icon(
+                      icon,
+                      color: AppConstants.textPrimary,
+                      size: (iconSize * 0.48).clamp(16.0, 22.0),
                     ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                  SizedBox(width: gap),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: (w * 0.055).clamp(12.0, 14.0),
+                            fontWeight: FontWeight.w600,
+                            color: AppConstants.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                          style: TextStyle(
+                            fontSize: (w * 0.048).clamp(10.5, 12.0),
+                            color: AppConstants.textSecondary,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -307,16 +300,8 @@ class _ContactFormState extends State<_ContactForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DepthPanel(
       padding: EdgeInsets.all(AppConstants.paddingLarge.w),
-      decoration: BoxDecoration(
-        color: AppConstants.cardColor,
-        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-        border: Border.all(
-          color: AppConstants.primaryColor.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
       child: Form(
         key: _formKey,
         child: Column(
